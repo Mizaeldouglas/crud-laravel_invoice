@@ -3,16 +3,22 @@
 namespace App\Http\Controllers\api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\v1\InvoiceResouce;
+use App\Models\Invoice;
+use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
+    use HttpResponses;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        return InvoiceResouce::collection(Invoice::with('user')->get());
     }
 
     /**
@@ -28,7 +34,26 @@ class InvoiceController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'type' => 'required|max:1',
+            'paid' => 'required|numeric|between:0,1',
+            'payment_date' => 'nullable',
+            'value' => 'required|numeric|between:0,999999.99',
+        ]);
+
+
+        if ($validator->fails()) {
+            return $this->error('Validation Error', 422, $validator->errors());
+        }
+
+        $created = Invoice::create($validator->validated());
+
+        if ($created) {
+            return $this->response('Invoice created successfully', 201,
+                new InvoiceResouce($created->load('user')));
+        }
+        return $this->error('Error creating invoice', 400);
     }
 
     /**
@@ -36,7 +61,7 @@ class InvoiceController extends Controller
      */
     public function show(string $id)
     {
-        //
+        return new InvoiceResouce(Invoice::where('id', $id)->first());
     }
 
     /**
