@@ -13,25 +13,11 @@ class InvoiceController extends Controller
 {
     use HttpResponses;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return InvoiceResouce::collection(Invoice::with('user')->get());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -56,35 +42,49 @@ class InvoiceController extends Controller
         return $this->error('Error creating invoice', 400);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
+
         return new InvoiceResouce(Invoice::where('id', $id)->first());
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Invoice $invoice)
     {
-        //
-    }
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'type' => 'required|max:1|in:' . implode(',', ['B','C','P']),
+            'paid' => 'required|numeric|between:0,1',
+            'payment_date' => 'nullable|date_format:Y-m-d H:i:s',
+            'value' => 'required|numeric',
+        ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        if ($validator->fails()) {
+            return $this->error('Validation Error', 422, $validator->errors());
+        }
+        $valideted = $validator->validated();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+
+
+        $updated = $invoice->update([
+            'user_id' => $valideted['user_id'],
+            'type' => $valideted['type'],
+            'paid' => $valideted['paid'],
+            'value' => $valideted['value'],
+            'payment_date' => $valideted['paid'] ? $valideted['payment_date'] : null,
+        ]);
+        if ($updated) {
+            return $this->response('Invoice updated successfully', 200,
+                new InvoiceResouce($invoice->first()->load('user')));
+        }
+        return $this->error('Error updating invoice', 400);
+
+    }
+    public function destroy(Invoice $invoice)
     {
-        //
+        $deleted = $invoice->delete();
+        if ($deleted) {
+            return $this->response('Invoice deleted successfully', 200);
+        }
+        return $this->error('Error deleting invoice', 400);
     }
 }
