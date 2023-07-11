@@ -19,10 +19,12 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('invoices', InvoiceController::class);
 
+    Route::get('users/{id}', [UserController::class, 'show']);
+    Route::get('/teste', [TesteController::class, 'index']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('users/{id}', [UserController::class, 'show']);
-        Route::get('/teste', [TesteController::class, 'index']);
-        Route::post('/logout', [AuthController::class, 'logout']);
+
     });
 
 
