@@ -17,7 +17,7 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login']);
 
-    Route::apiResource('invoices', InvoiceController::class);
+    Route::apiResource('/invoices', InvoiceController::class);
 
     Route::get('users/{id}', [UserController::class, 'show']);
     Route::get('/teste', [TesteController::class, 'index']);
