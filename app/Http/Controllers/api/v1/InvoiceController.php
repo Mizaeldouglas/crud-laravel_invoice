@@ -13,13 +13,29 @@ class InvoiceController extends Controller
 {
     use HttpResponses;
 
-    public function index()
+    public function __construct()
     {
-        return InvoiceResouce::collection(Invoice::with('user')->get());
+        $this->middleware('auth:sanctum')->only(['store', 'update']);
+    }
+
+    public function index(Request $request)
+    {
+//        return InvoiceResouce::collection(Invoice::with('user')->get());
+//        return InvoiceResouce::collection(Invoice::where([
+//            ['value', '>', 5000],
+//            ['paid', '=', 1],
+//        ])->with('user')->get());
+    return (new Invoice())->filter($request);
+
+
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user()->tokenCan('invoice-store')){
+            return $this->error('Unauthorized', 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
             'type' => 'required|max:1',
